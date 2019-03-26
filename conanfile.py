@@ -50,7 +50,7 @@ class PjsipConan(ConanFile):
 
     def requirements(self):
         if self.settings.os == "Linux":
-            self.requires("libasound2/1.1.0@totemic/stable")
+            self.requires("libasound2/1.1.0@roboauto/stable")
         if self.options.SSL:
             self.requires(_openSSL+"/1.0.2@conan/stable")
 
@@ -60,6 +60,7 @@ class PjsipConan(ConanFile):
             # Getting build errors when cross-compiling webrtc on ARM
             # since we don't use it, just disable it for now
             args = [] # "--disable-libwebrtc"
+            args.append("--disable-libwebrtc")
             if self.options.shared: 
                 args.append("--enable-shared")
             if self.options.SSL:
@@ -68,6 +69,7 @@ class PjsipConan(ConanFile):
                 self.output.info("openSSLroot: %s" % openSSLroot)
             if self.options.disableSpeexAec:
                 self._autotools.defines.append("PJMEDIA_HAS_SPEEX_AEC=0")
+
             # pjsip expects the architecture to be armv7hf-linux-gnueabihf
             host = self._autotools.host
             arch = str(self.settings.arch)
@@ -128,6 +130,11 @@ class PjsipConan(ConanFile):
             self.output.info("env_build_vars: %s" % env_build_vars)
             # only build the lib target, we don't want to build the sample apps
             autotools.make(target="lib", vars=env_build_vars)
+
+        # fix for std17
+        os.system("find . -type f -exec sed -i 's/ throw (Error)//g' {} +")
+        os.system("find . -type f -exec sed -i 's/ throw(Error)//g' {} +")
+
 
     def package(self):
 #        self.copy("*.h", dst="include", src="hello")
